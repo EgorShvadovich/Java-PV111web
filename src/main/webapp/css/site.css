@@ -1,3 +1,13 @@
 nav ul a {
     display: inline-flex!important;
 }
+
+.modal-footer{
+    display:flex;
+    align-items: center;
+}
+.auth-message{
+    flex:1 1 auto;
+    text-align:center;
+
+}

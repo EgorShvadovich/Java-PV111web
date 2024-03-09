@@ -146,7 +146,7 @@ public class SignUpServlet extends HttpServlet {
         }
 
         if( isValid ) {
-            //userDao.signupUser(userName, userPhone, userPassword, userEmail, savedFilename);
+            userDao.signupUser(userName, userPhone, userPassword, userEmail, savedFilename);
         }
 
         session.setAttribute( "form-status", errorMessages );

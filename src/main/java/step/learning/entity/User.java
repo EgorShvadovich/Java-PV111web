@@ -1,5 +1,7 @@
 package step.learning.entity;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.UUID;
 
 public class User {
@@ -12,7 +14,15 @@ public class User {
     private String passwordDk;
 
 
-
+    public User(ResultSet resultSet) throws SQLException {
+        setId(UUID.fromString(resultSet.getString("id")));
+        setName(resultSet.getString("name"));
+        setPhone(resultSet.getString("phone"));
+        setEmail(resultSet.getString("email"));
+        setAvatar(resultSet.getString("avatar"));
+        setPasswordDk(resultSet.getString("dk"));
+        setPasswordSalt(resultSet.getString("salt"));
+    }
     public UUID getId() {
         return id;
     }

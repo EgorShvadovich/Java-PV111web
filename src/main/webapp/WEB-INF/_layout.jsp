@@ -1,3 +1,4 @@
+<%@ page import="step.learning.entity.User" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%
     String pageBody = (String) request.getAttribute( "page-body" ) ;
@@ -5,6 +6,7 @@
         pageBody = "home.jsp" ;   // default page
     }
     String contextPath = request.getContextPath() ;
+    User user = (User) request.getAttribute("auth-user");
 %>
 <!doctype html>
 <html>
@@ -22,10 +24,24 @@
         <a href="#" class="brand-logo left">Logo</a>
         <ul id="nav-mobile" class="right ">
             <li><a href="<%=contextPath%>/ioc"><i class="material-icons">sync</i>IoC</a></li>
-            <li><a href="#">Components</a></li>
+            <li><a href="<%=contextPath%>/news">Новини</a></li>
             <li><a href="#">JavaScript</a></li>
             <li><a href="<%=contextPath%>/privacy">Privacy</a></li>
             <li><a href="<%=contextPath%>/signup"><i class="material-icons">person_add</i></a></li>
+            <% if(user == null){
+                %>
+            <li><a href="#modal-auth" class="modal-trigger"><i class="material-icons">key</i></a></li>
+            <%
+            }else{%>
+            <li>
+                <a href="#">
+                    <img src="<%= user.getAvatar() != null ? contextPath + "/upload/avatar/" + user.getAvatar() : contextPath + "/upload/avatar/no-avatar1.png" %>"
+                         class="avatar">
+                </a>
+            </li>
+            <li><a href="?logout"><i class="material-icons">logout</i></a></li>
+            <%}%>
+
 
         </ul>
 
@@ -40,7 +56,7 @@
 
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-
+    <script src="<%=contextPath%>/js/site.js"></script>
 </body>
 <footer class="page-footer indigo">
     <div class="container">
@@ -67,4 +83,31 @@
         </div>
     </div>
 </footer>
+
+<div id="modal-auth" class="modal">
+    <div class="modal-content">
+
+        <h4>Автентифікація</h4>
+        <div class="row">
+            <div class="input-field col s11">
+                <i class="material-icons prefix">mail</i>
+                <input  id="auth-email" type="email">
+                <label for="auth-email">E-mail</label>
+            </div>
+            <div class="input-field col s11">
+                <i class="material-icons prefix">lock</i>
+                <input  id="auth-password" type="password">
+                <label for="auth-password">Пароль</label>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <div class="auth-message"></div>
+        <div>
+            <button class="modal-close btn-flat grey">Закрити</button>
+            <button id="auth-button" class="btn-flat indigo white-text waves-effect">Вхід</button>
+        </div>
+
+    </div>
+</div>
 </html>
