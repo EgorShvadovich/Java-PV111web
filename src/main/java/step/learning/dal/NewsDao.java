@@ -21,8 +21,69 @@ public class NewsDao {
         this.dbService = dbService;
         this.logger = logger;
     }
+    public News getById( String id ) {
+        String sql = "SELECT * FROM News WHERE id=?" ;
+        try( PreparedStatement prep = dbService.getConnection().prepareStatement(sql) ) {
+            prep.setString(1, id);
+            ResultSet res = prep.executeQuery();
+            return res.next() ? News.fromResultSet(res) : null ;
+        }
+        catch( SQLException ex ) {
+            logger.log( Level.SEVERE, ex.getMessage() + " -- " + sql );
+        }
+        return null ;
+    }
 
+    public List<News> getAll() {
+        return getAll(false);
+    }
+    public List<News> getAll(boolean withDeleted) {
+        List<News> ret = new ArrayList<>();
+        String sql = "SELECT * FROM News" ;
+        if( ! withDeleted) {
+            sql += " WHERE deleted_dt IS NULL" ;
+        }
+        try( Statement statement = dbService.getConnection().createStatement() ) {
+            ResultSet res = statement.executeQuery( sql ) ;
+            while( res.next() ) {
+                ret.add( News.fromResultSet(res) ) ;
+            }
+        }
+        catch( SQLException ex ) {
+            logger.log( Level.SEVERE, ex.getMessage() + " -- " + sql );
+        }
+        return ret;
+    }
+    public boolean addNews(News news) {
+        String sql = "INSERT INTO News(id, title, spoiler, `text`, image_url, created_dt)" +
+                " VALUES( UUID(), ?, ?, ?, ?, ?)";
+        try( PreparedStatement prep = dbService.getConnection().prepareStatement(sql) ) {
+            prep.setString(1, news.getTitle());
+            prep.setString(2, news.getSpoiler());
+            prep.setString(3, news.getText());
+            prep.setString(4, news.getImageUrl());
+            prep.setTimestamp(5, new Timestamp(news.getCreateDt().getTime()) );
+            prep.executeUpdate();
+            return true ;
+        }
+        catch( SQLException ex ) {
+            logger.log( Level.SEVERE, ex.getMessage() + " -- " + sql );
+        }
+        return false ;
+    }
 
+    public boolean deleteNews(String id) {
+        String sql = "UPDATE News SET deleted_dt = CURRENT_TIMESTAMP WHERE id=?";
+        try( PreparedStatement prep = dbService.getConnection().prepareStatement(sql) ) {
+            prep.setString(1, id);
+            prep.executeUpdate();
+            return true ;
+        }
+        catch( SQLException ex ) {
+            logger.log( Level.SEVERE, ex.getMessage() + " -- " + sql );
+        }
+        return false ;
+    }
 
     public boolean installTable() {
         String sql = "CREATE TABLE  IF NOT EXISTS  News(" +
@@ -44,45 +105,13 @@ public class NewsDao {
         }
         return false ;
     }
-
-    public boolean addNews(News news){
-
-
-        String sql = "INSERT INTO News(id,title,spoiler,`text`,image_url,created_dt)"+
-                " VALUES(UUID(),?,?,?,?,?)";
-        try( PreparedStatement prep = dbService.getConnection().prepareStatement(sql) ) {
-            prep.setString(1, news.getTitle());
-            prep.setString(2, news.getSpoiler());
-            prep.setString(3, news.getText());
-            prep.setString(4, news.getImageUrl());
-            prep.setTimestamp(5, new Timestamp(news.getCreateDt().getTime()));
-            prep.executeUpdate();
-            return true ;
-        }
-        catch( SQLException ex ) {
-            logger.log( Level.SEVERE, ex.getMessage() + " -- " + sql );
-        }
-
-        return true;
-    }
-
-    public List<News> getAll(){
-        List<News> ret = new ArrayList<>();
-        String sql = "SELECT * FROM News";
-        try( Statement statement = dbService.getConnection().createStatement() ) {
-           ResultSet res = statement.executeQuery(sql);
-            while(res.next()){
-                ret.add(News.fromResultSet(res));
-            }
-        }
-        catch( SQLException ex ) {
-            logger.log( Level.SEVERE, ex.getMessage() + " -- " + sql );
-        }
-        return ret;
-    }
 }
 /*
-Д.З. Фільтри:
-Додати налаштування для фільтрів, у т.ч. фільтра для зміни кодування,
-з урахуванням того, що на ресурси вони не повинні спрацьовувати.
+Д.З. Авторизація з ролями
+Обмежити доступ до детального перегляду новини, якщо вона видалена.
+- додати параметр "withDeleted" методу NewsDao::getById( withDeleted )
+- контролювати доступ користувача з сервлету і викликати відповідну форму NewsDao::getById
+- змінити представлення детального перегляду новини: за умови, що вона видалена,
+   відображати відмінним стилем або з повідомленням, що вона видалена
+   !тільки користувачів, що мають на це право.
  */

@@ -2,6 +2,8 @@ package step.learning.entity;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class User {
@@ -14,6 +16,7 @@ public class User {
     private String passwordDk;
 
 
+    private List<Role> roles;
     public User(ResultSet resultSet) throws SQLException {
         setId(UUID.fromString(resultSet.getString("id")));
         setName(resultSet.getString("name"));
@@ -23,6 +26,19 @@ public class User {
         setPasswordDk(resultSet.getString("dk"));
         setPasswordSalt(resultSet.getString("salt"));
     }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public User includeRules(ResultSet resultSet) throws SQLException {
+        this.roles = new ArrayList<>();
+        while(resultSet.next()){
+            roles.add(new Role(resultSet));
+        }
+        return this;
+    }
+
     public UUID getId() {
         return id;
     }

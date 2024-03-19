@@ -45,7 +45,16 @@ public class UserDao {
             return false;
         }
     }
+    private User includeRoles(User user){
+        String sql = String.format("SELECT * FROM User_Roles ur JOIN Roles r ON ur.role_id = id" + " Where ur.user_id='%s'",user.getId());
+        try(Statement statement = dbService.getConnection().createStatement()) {
+            user.includeRules(statement.executeQuery(sql));
+        } catch (SQLException e) {
+            logger.log(Level.WARNING, e.getMessage() + " " + sql);
 
+        }
+        return user;
+    }
     public User getUserByCredentials(String email, String password) {
         if(email.isEmpty() || !email.matches("^[A-Za-z0-9+_.-]+@(.+)$")){
             logger.log(Level.WARNING, "Invalid email format" );
@@ -60,7 +69,7 @@ public class UserDao {
                 String salt = resultSet.getString("salt");
                 String dk = resultSet.getString("dk");
                 if (kdfService.dk(password, salt).equals(dk)) {
-                    return new User(resultSet);
+                    return includeRoles(new User(resultSet));
                 }
             }
         } catch (SQLException ex) {
@@ -69,6 +78,18 @@ public class UserDao {
         return null;
     }
 
+    public User getUserBuId(String id){
+        String sql = "SELECT * FROM Users WHERE id = ? LIMIT 1";
+
+        try (PreparedStatement prep = dbService.getConnection().prepareStatement(sql)){
+            prep.setString(1,id.toString());
+            ResultSet resultSet = prep.executeQuery();
+            return resultSet.next() ? includeRoles(new User(resultSet)) : null;
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE,e.getMessage() + " " + sql);
+            return null;
+        }
+    }
     public boolean installTable() {
         String sql = "CREATE TABLE Users(" +
                 "id         CHAR(36) PRIMARY KEY DEFAULT( UUID())," +

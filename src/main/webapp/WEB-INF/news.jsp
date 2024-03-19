@@ -2,38 +2,48 @@
 <%@ page import="step.learning.entity.News" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.util.Objects" %>
 <%@ page contentType="text/html;charset=UTF-8" %>
 <%
     String contextPath = request.getContextPath() ;
+    System.out.println(contextPath);
     User user = (User) request.getAttribute("auth-user");
     List<News> news = (List<News>) request.getAttribute("news");
     SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy");
 %>
 <h1>Новини</h1>
+
 <% for(News n : news) { %>
-<div class="col s12 m7">
+<div class="col s12 m7" style="opacity: <%= n.getDeleteDt() == null ? 1 : .5 %>" >
     <div class="card horizontal">
-        <div class="card-image" style="flex: 1">
-            <img src="<%=contextPath%>/upload/news/<%=n.getImageUrl()%>" alt="img" />
+        <div class="card-image" style="flex: 1; place-self: center;">
+            <img src="<%=contextPath%>/upload/news/<%=n.getImageUrl()%>" alt="img"
+                 style="max-height: 25vh; margin: auto"/>
         </div>
-        <div class="card-stacked" style="flex: 2">
+        <div class="card-stacked" style="flex: 3">
             <div class="card-content">
                 <h5><%=n.getTitle()%></h5>
-                <p><%=dateFormat.format(n.getCreateDt())%></p>
+                <p><%=dateFormat.format( n.getCreateDt() )%></p>
                 <small>
                     <%=n.getSpoiler()%>
                 </small>
             </div>
             <div class="card-action">
-                <a href="#">читати детальніше...</a>
+                <% if( Objects.equals( request.getAttribute("can-delete"), true ) ) {
+                    if(n.getDeleteDt() == null) { %>
+                <a href="#" class="right" data-news-id="<%=n.getId()%>"><i class="material-icons prefix">delete_forever</i></a>
+                <% } else { %>
+                <a href="#" class="right" data-news-restore-id="<%=n.getId()%>"><i class="material-icons prefix">restore_from_trash</i></a>
+                <% } } %>
+                <a href="<%=contextPath%>/news/<%=n.getId()%>">читати детальніше...</a>
             </div>
         </div>
     </div>
 </div>
 <% } %>
-<% if(user != null){%>
 
-}
+<% if( user != null ) {
+    if( Objects.equals( request.getAttribute("can-create"), true ) ) { %>
 <p>
     Контроль таблиці: <%= request.getAttribute( "create-status" ) %>
 </p>
@@ -49,7 +59,7 @@
                     <input id="news-file-path" class="file-path validate" type="text">
                 </div>
             </div>
-            <div style="width: 100%;" id="news-image-preview" src="<%=contextPath%>/upload/news/no-avatar1.png" style="width: 100%; min-height: 100px; background-color: #bebebe"></div>
+            <img style="width: 100%" id="news-image-preview" src="<%=contextPath%>/upload/news/no-image.jpg" alt="img" />
         </div>
         <div class="col s8">
             <div class="input-field row">
@@ -79,4 +89,7 @@
 
     <div class="row"><button id="news-submit" class="btn indigo right">Публікувати</button> </div>
 </div>
-<% } %>
+<% } else { %>
+<div class="card-panel pink white-text center">У вас немає прав на створення новин</div>
+<% }
+} %>
